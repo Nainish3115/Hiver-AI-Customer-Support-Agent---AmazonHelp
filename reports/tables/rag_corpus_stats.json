@@ -1,0 +1,9 @@
+{
+  "total_eligible_conversations": 81186,
+  "conversations_with_resolution": 81178,
+  "conversations_without_resolution": 8,
+  "resolution_rate_pct": 99.99,
+  "avg_resolution_char_length": 123.83,
+  "duplicate_problem_cases": 60,
+  "unique_cases_count": 81126
+}

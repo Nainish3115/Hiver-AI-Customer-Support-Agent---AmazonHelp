@@ -1,0 +1,9 @@
+{
+  "total_conversations_before": 82676,
+  "failed_both_participants": 3,
+  "failed_min_length_2": 0,
+  "failed_customer_text_length_15": 153,
+  "failed_valid_duration": 1335,
+  "total_eligible_after": 81186,
+  "retention_rate_pct": 98.2
+}

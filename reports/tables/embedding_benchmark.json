@@ -1,0 +1,56 @@
+{
+  "model_name": "all-MiniLM-L6-v2",
+  "embedding_dimension": 384,
+  "device": "cpu",
+  "cuda_available": false,
+  "cpu_count": 16,
+  "model_load_time_seconds": 3.642,
+  "initial_memory_mb": 639.97,
+  "post_load_memory_mb": 686.13,
+  "benchmark_sample_size": 1000,
+  "configurations": [
+    {
+      "batch_size": 128,
+      "max_seq_length": 128,
+      "num_threads": 4,
+      "encoding_time_seconds": 47.338,
+      "docs_per_second": 21.12,
+      "est_full_corpus_minutes": 64.05,
+      "est_full_corpus_seconds": 3843.2,
+      "rss_mem_mb": 1035.0,
+      "embedding_shape": [
+        1000,
+        384
+      ]
+    },
+    {
+      "batch_size": 256,
+      "max_seq_length": 128,
+      "num_threads": 4,
+      "encoding_time_seconds": 52.773,
+      "docs_per_second": 18.95,
+      "est_full_corpus_minutes": 71.41,
+      "est_full_corpus_seconds": 4284.4,
+      "rss_mem_mb": 1343.07,
+      "embedding_shape": [
+        1000,
+        384
+      ]
+    },
+    {
+      "batch_size": 256,
+      "max_seq_length": 256,
+      "num_threads": 4,
+      "encoding_time_seconds": 121.688,
+      "docs_per_second": 8.22,
+      "est_full_corpus_minutes": 164.66,
+      "est_full_corpus_seconds": 9879.4,
+      "rss_mem_mb": 1896.34,
+      "embedding_shape": [
+        1000,
+        384
+      ]
+    }
+  ],
+  "total_benchmark_time_seconds": 227.446
+}

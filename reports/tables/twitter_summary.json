@@ -1,0 +1,84 @@
+{
+  "dataset_name": "Customer Support on Twitter",
+  "file_path": "d:\\hiver-support-agent\\data\\raw\\customer_support_on_twitter.csv",
+  "file_size_bytes": 516508641,
+  "total_rows": 2811774,
+  "total_columns": 7,
+  "columns": [
+    "tweet_id",
+    "author_id",
+    "inbound",
+    "created_at",
+    "text",
+    "response_tweet_id",
+    "in_response_to_tweet_id"
+  ],
+  "dtypes": {
+    "tweet_id": "int64",
+    "author_id": "object",
+    "inbound": "bool",
+    "created_at": "object",
+    "text": "object",
+    "response_tweet_id": "object",
+    "in_response_to_tweet_id": "float64"
+  },
+  "missing_values": {
+    "tweet_id": 0,
+    "author_id": 0,
+    "inbound": 0,
+    "created_at": 0,
+    "text": 0,
+    "response_tweet_id": 1040629,
+    "in_response_to_tweet_id": 794335
+  },
+  "duplicate_full_rows": 0,
+  "duplicate_tweet_ids": 0,
+  "inbound_count": 1537843,
+  "outbound_count": 1273931,
+  "inbound_ratio": 0.5469,
+  "outbound_ratio": 0.4531,
+  "unique_customer_authors": 702669,
+  "unique_brand_authors": 108,
+  "total_unique_authors": 702777,
+  "date_min": "2008-05-08 20:13:59+00:00",
+  "date_max": "2017-12-03 23:14:01+00:00",
+  "tweets_with_replies_count": 1771145,
+  "tweets_are_replies_count": 2017439,
+  "root_tweets_count": 798197,
+  "char_length_stats": {
+    "inbound": {
+      "mean": 109.94,
+      "std": 57.16,
+      "min": 1,
+      "median": 109.0,
+      "p95": 224.0,
+      "max": 513
+    },
+    "outbound": {
+      "mean": 118.66,
+      "std": 45.4,
+      "min": 6,
+      "median": 120.0,
+      "p95": 206.0,
+      "max": 343
+    }
+  },
+  "word_count_stats": {
+    "inbound": {
+      "mean": 18.73,
+      "std": 10.64,
+      "min": 1,
+      "median": 18.0,
+      "p95": 39.0,
+      "max": 137
+    },
+    "outbound": {
+      "mean": 20.34,
+      "std": 8.12,
+      "min": 1,
+      "median": 20.0,
+      "p95": 36.0,
+      "max": 66
+    }
+  }
+}

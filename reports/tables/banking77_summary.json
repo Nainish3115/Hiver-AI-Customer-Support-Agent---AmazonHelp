@@ -1,0 +1,69 @@
+{
+  "train_rows": 9993,
+  "train_cols": [
+    "text",
+    "label",
+    "label_text"
+  ],
+  "test_rows": 3076,
+  "test_cols": [
+    "text",
+    "label",
+    "label_text"
+  ],
+  "train_missing": {
+    "text": 0,
+    "label": 0,
+    "label_text": 0
+  },
+  "test_missing": {
+    "text": 0,
+    "label": 0,
+    "label_text": 0
+  },
+  "train_duplicates": 0,
+  "test_duplicates": 0,
+  "train_text_duplicates": 0,
+  "test_text_duplicates": 0,
+  "unique_intents_train": 77,
+  "unique_intents_test": 77,
+  "intents_match": true,
+  "train_test_text_overlap": 0,
+  "is_standard_split": false,
+  "label_dist_train": {
+    "min": 35,
+    "max": 187,
+    "mean": 129.7792207792208,
+    "median": 127.0,
+    "std": 32.9743214991938
+  },
+  "label_dist_test": {
+    "min": 39,
+    "max": 40,
+    "mean": 39.94805194805195,
+    "median": 40.0,
+    "std": 0.2233774181740458
+  },
+  "representative_samples": [
+    {
+      "intent": "card_arrival",
+      "text": "I am still waiting on my card?"
+    },
+    {
+      "intent": "card_linking",
+      "text": "My card has been found. Is there any way for me to put it back into the app?"
+    },
+    {
+      "intent": "exchange_rate",
+      "text": "What is my money worth in other countries?"
+    },
+    {
+      "intent": "card_payment_wrong_exchange_rate",
+      "text": "Last Saturday, I was charged extra for the exchange rate on my payment. Is something wrong?"
+    },
+    {
+      "intent": "extra_charge_on_statement",
+      "text": "Why is there an extra fee on my statement?"
+    }
+  ]
+}

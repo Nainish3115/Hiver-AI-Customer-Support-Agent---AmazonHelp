@@ -1,0 +1,10 @@
+{
+  "total_extracted_tweets": 372837,
+  "total_reconstructed_conversations": 82676,
+  "conversations_with_both_participants": 82673,
+  "single_tweet_orphans": 0,
+  "threads_with_missing_parents": 966,
+  "multi_turn_conversations_cnt": 51335,
+  "avg_thread_depth": 3.9287217572209587,
+  "max_thread_depth": 448
+}

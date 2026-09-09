@@ -1,0 +1,95 @@
+{
+  "total_classified_conversations": 82676,
+  "unique_intents_found": 17,
+  "top_intent": [
+    "general_inquiry_other",
+    53976
+  ],
+  "distribution": [
+    {
+      "intent_name": "general_inquiry_other",
+      "count": 53976,
+      "percentage": 65.29
+    },
+    {
+      "intent_name": "prime_membership_subscription",
+      "count": 7170,
+      "percentage": 8.67
+    },
+    {
+      "intent_name": "digital_content_kindle_video",
+      "count": 2750,
+      "percentage": 3.33
+    },
+    {
+      "intent_name": "account_access_login",
+      "count": 2561,
+      "percentage": 3.1
+    },
+    {
+      "intent_name": "refund_status_request",
+      "count": 2328,
+      "percentage": 2.82
+    },
+    {
+      "intent_name": "late_delivery_shipping_delay",
+      "count": 2319,
+      "percentage": 2.8
+    },
+    {
+      "intent_name": "payment_billing_issue",
+      "count": 1818,
+      "percentage": 2.2
+    },
+    {
+      "intent_name": "return_exchange_inquiry",
+      "count": 1594,
+      "percentage": 1.93
+    },
+    {
+      "intent_name": "address_delivery_instructions",
+      "count": 1509,
+      "percentage": 1.83
+    },
+    {
+      "intent_name": "order_tracking_delivery_status",
+      "count": 1447,
+      "percentage": 1.75
+    },
+    {
+      "intent_name": "order_cancellation_request",
+      "count": 1438,
+      "percentage": 1.74
+    },
+    {
+      "intent_name": "customer_service_complaint",
+      "count": 1131,
+      "percentage": 1.37
+    },
+    {
+      "intent_name": "damaged_defective_item",
+      "count": 1127,
+      "percentage": 1.36
+    },
+    {
+      "intent_name": "third_party_seller_issue",
+      "count": 542,
+      "percentage": 0.66
+    },
+    {
+      "intent_name": "missing_package_delivered_not_received",
+      "count": 511,
+      "percentage": 0.62
+    },
+    {
+      "intent_name": "promotions_discounts_coupons",
+      "count": 276,
+      "percentage": 0.33
+    },
+    {
+      "intent_name": "wrong_item_received",
+      "count": 179,
+      "percentage": 0.22
+    }
+  ]
+}

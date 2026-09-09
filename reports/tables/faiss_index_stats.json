@@ -1,0 +1,20 @@
+{
+  "source_jsonl": "data\\processed\\amazonhelp_rag_documents_15k.jsonl",
+  "total_input_documents": 15000,
+  "exact_duplicate_documents": 0,
+  "indexed_documents_count": 15000,
+  "embedding_model": "all-MiniLM-L6-v2",
+  "embedding_dimension": 384,
+  "batch_size": 128,
+  "max_seq_length": 128,
+  "pytorch_threads": 4,
+  "chunk_size": 5000,
+  "num_chunks": 3,
+  "bounded_max_docs": null,
+  "embedding_runtime_seconds": 786.29,
+  "index_building_runtime_seconds": 0.01,
+  "total_runtime_seconds": 794.25,
+  "index_disk_size_mb": 39.7,
+  "initial_rss_mb": 657.24,
+  "final_rss_mb": 1271.49
+}
