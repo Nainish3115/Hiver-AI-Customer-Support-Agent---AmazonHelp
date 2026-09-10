@@ -81,13 +81,15 @@ class CustomerSupportPipeline:
     def __init__(
         self,
         classifier: IntentClassifier,
-        base_retriever: FAISSRetriever,
+        base_retriever: Retriever,
         generator: BaseResponseGenerator,
         confidence_threshold: float = 0.60,
         top_k_retrieve: int = 10,
         top_k_evidence: int = 3,
         safety_checker: Optional[GroundingSafetyChecker] = None,
-        decision_engine: Optional[RiskAwareDecisionEngine] = None
+        decision_engine: Optional[RiskAwareDecisionEngine] = None,
+        reranker: Optional[Any] = None,
+        reranker_candidate_k: int = 30
     ):
         self.classifier = classifier
         self.base_retriever = base_retriever
@@ -97,12 +99,15 @@ class CustomerSupportPipeline:
         self.top_k_evidence = top_k_evidence
         self.safety_checker = safety_checker or GroundingSafetyChecker()
         self.decision_engine = decision_engine or RiskAwareDecisionEngine()
+        self.reranker = reranker
+        self.reranker_candidate_k = reranker_candidate_k
 
         self.intent_aware_retriever = IntentAwareRetriever(
-            embedding_provider=base_retriever.embedding_provider,
-            vector_store=base_retriever.vector_store,
+            embedding_provider=getattr(base_retriever, "embedding_provider", None),
+            vector_store=getattr(base_retriever, "vector_store", None),
             classifier=classifier,
-            confidence_threshold=confidence_threshold
+            confidence_threshold=confidence_threshold,
+            base_retriever=base_retriever
         )
         self.evidence_selector = EvidenceSelector(
             max_evidence=top_k_evidence,
@@ -122,12 +127,19 @@ class CustomerSupportPipeline:
         pred = self.classifier.predict(customer_message)
 
         # 2. Confidence Gating & Retrieval Mode Selection
+        ret_k = max(self.top_k_retrieve, self.reranker_candidate_k) if self.reranker is not None else self.top_k_retrieve
+
         if pred.confidence >= self.confidence_threshold:
             retrieval_mode = "intent_aware"
-            raw_results = self.intent_aware_retriever.retrieve(customer_message, top_k=self.top_k_retrieve)
+            raw_results = self.intent_aware_retriever.retrieve(customer_message, top_k=ret_k)
         else:
             retrieval_mode = "semantic_fallback"
-            raw_results = self.base_retriever.retrieve(customer_message, top_k=self.top_k_retrieve)
+            raw_results = self.base_retriever.retrieve(customer_message, top_k=ret_k)
+
+        # Apply Cross-Encoder Reranker if present
+        if self.reranker is not None:
+            raw_results = self.reranker.rerank(customer_message, raw_results, top_k=self.top_k_retrieve)
+            retrieval_mode += "+reranked"
 
         # 3. Exclude target self-case from evidence to prevent evaluation data leakage
         filtered_results: List[SearchResult] = []

@@ -102,7 +102,10 @@ This document records 15 critical technical and architectural decisions made thr
 
 ---
 
-### Decision 15: Single Canonical End-to-End Result Contract (`EndToEndResult`)
-- **Context**: Evaluating and debugging multi-stage pipelines requires tracking intermediate state across all layers.
-- **Decision**: Standardized all pipeline outputs into a single unified Pydantic data model (`EndToEndResult`).
-- **Rationale**: Provides clean, typed API access (`process_end_to_end`) for CLI evaluation scripts, unit tests, and future UI/API integrations.
+---
+
+### Decision 16: Hybrid RRF Retrieval Architecture (Dense + BM25)
+- **Context**: Pure dense vector retrieval struggles with exact term matches (order IDs, specific product models), while pure BM25 lexical retrieval fails on semantic synonyms.
+- **Decision**: Implemented `HybridRetriever` using Reciprocal Rank Fusion (RRF with $k=60$) combining FAISS dense vector search and BM25Okapi lexical search, followed by `IntentAwareRetriever` reranking.
+- **Rationale**: Achieved a Recall@1 of **53.5%** and MRR of **0.5594** on the 200 Gold Case benchmark (a +25.5% absolute Recall@1 improvement over pure dense baseline), with minimal candidate overlap (0.73/10) demonstrating high complementarity between dense and lexical search modes.
+

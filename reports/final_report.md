@@ -14,8 +14,8 @@ Customer support operations face escalating query volumes, leading to high respo
 2. **Customer Safety & Precision**: Preventing incorrect, ungrounded, or hallucinatory responses from reaching customers.
 
 We present an end-to-end, RAG-powered AI Customer Support Agent specifically built for `@AmazonHelp`. The pipeline integrates:
-- **17-Intent Domain Taxonomy & Hybrid Classifier**: Categorizes customer inquiries using rule-based regex patterns and MiniLM embedding prototypes.
-- **Intent-Aware Historical Retrieval**: Searches a 15,316-document RAG corpus of reconstructed AmazonHelp resolution threads using `all-MiniLM-L6-v2` and FAISS.
+- **17-Intent Domain Taxonomy & Hybrid Classifier**: Categorizes customer inquiries using rule-based regex patterns and Linear SVM classifiers with TF-IDF n-grams.
+- **Hybrid Vector & Lexical Retrieval**: Searches a 15,316-document RAG corpus of reconstructed AmazonHelp resolution threads using `all-MiniLM-L6-v2` dense vectors, BM25Okapi lexical index, Reciprocal Rank Fusion ($k=60$), and intent-aware metadata reranking.
 - **Grounded LLM Response Generation**: Synthesizes customer responses using Google Gemini 1.5 Flash backed by historical evidence.
 - **Grounding & Entity Safety Validation**: Validates entity formats, order IDs, URLs, and response lengths deterministically.
 - **Risk-Aware Decision Engine**: Computes interpretable risk signals across intent uncertainty, retrieval quality, evidence sufficiency, intent category risk, and safety checks to decide whether to `AUTO_HANDLE` or `ESCALATE_TO_HUMAN`.
@@ -25,7 +25,7 @@ We present an end-to-end, RAG-powered AI Customer Support Agent specifically bui
 ## 2. Dataset & Intent Taxonomy
 
 - **Dataset**: Filtered and reconstructed from 2.8M tweets in the *Customer Support on Twitter* corpus.
-- **Brand Corpus**: 170,000+ tweets directed to `@AmazonHelp`.
+- **Brand Corpus**: 170,000+ tweets directed to `@AmazonHelp` (81,186 valid multi-turn dialog documents).
 - **Thread Reconstruction**: Built a graph-based thread assembly engine generating multi-turn dialog pairs (`min_depth=2`, `max_depth=10`), yielding 15,316 clean customer problem-resolution pairs.
 - **17-Intent Taxonomy**: Formulated specifically for e-commerce support:
   1. `order_tracking_delivery_status`
@@ -51,14 +51,15 @@ We present an end-to-end, RAG-powered AI Customer Support Agent specifically bui
 ## 3. Retrieval + Historical Grounding
 
 - **Embedding Model**: `sentence-transformers/all-MiniLM-L6-v2` (384 dimensions, batch size 128).
-- **Index**: Flat L2 FAISS Vector Index over 15,316 resolution documents.
-- **Intent-Aware Reranking**: When intent classifier confidence $\ge 0.60$, search space is filtered by intent category before semantic ranking, with fallback to pure semantic search otherwise.
-- **Retrieval Performance** ($N=200$ Gold Cases vs 15k RAG Corpus):
-  - **Recall@1**: **49.0%**
-  - **Recall@3**: **73.5%**
-  - **Recall@5**: **81.5%**
-  - **Recall@10**: **89.5%**
-  - **MRR**: **0.6384**
+- **Index**: Flat L2 FAISS Vector Index over 15,316 resolution documents, supplemented by Okapi BM25 lexical index.
+- **Hybrid RRF + Intent-Aware Reranking**: Merges dense semantic ranks and BM25 lexical ranks via Reciprocal Rank Fusion ($k=60$). When classifier confidence $\ge 0.30$, candidates matching predicted intent receive an intent boost multiplier ($1.5\times$).
+- **Approved Default Retrieval Performance** (Phase 9 Approved: $N=200$ Gold Cases vs 15k RAG Corpus):
+  - **Recall@1**: **53.5%**
+  - **Recall@3**: **55.5%**
+  - **Recall@5**: **58.0%**
+  - **Recall@10**: **65.5%**
+  - **MRR**: **0.5590**
+- **Experimental Reranker Note**: Phase 10 evaluated adding an MS-MARCO Cross-Encoder (`cross-encoder/ms-marco-MiniLM-L-6-v2`) to re-order top 30 candidates before intent boosting. Reranking improved Recall@10 (65.5% → 69.0%) but severely degraded Recall@1 (53.5% → 35.5%) and MRR (0.5590 → 0.4602) due to demoting intent-aligned precedents. Consequently, Phase 9 remains the approved default system architecture (`reranking.enabled: false`).
 
 ---
 
@@ -85,21 +86,21 @@ $$\text{Composite Risk} = 0.40 \cdot \text{Risk}_{\text{intent}} + 0.30 \cdot \t
 
 ---
 
-## 6. Evaluation Summary
+## 6. Authoritative Benchmark Evaluation Table
 
-| Evaluation Benchmark | Metric | Value | Benchmark Description |
-| :--- | :--- | :--- | :--- |
-| **Intent Classification** | Accuracy | **57.5%** | 200 Human Gold Intent Cases |
-| | Macro F1 | **0.5841** | 200 Human Gold Intent Cases |
-| | Weighted F1 | **0.5841** | 200 Human Gold Intent Cases |
-| **Retrieval Engine** | Recall@3 | **73.5%** | 200 Gold Cases vs 15k Index |
-| | MRR | **0.6384** | 200 Gold Cases vs 15k Index |
-| **Response Generation** | LLM Judge | **4.72 / 5.0** | Gemini 1.5 Flash Live Run ($N=50$) |
-| | Grounding Pass | **100.0%** | Gemini 1.5 Flash Live Run ($N=50$) |
-| **Human Escalation Set** | Model–Human Decision Agreement | **74.0%** | 50 Human Escalation Validation Set |
-| | Model Auto-Handle Rate | **82.0%** | 50 Human Escalation Validation Set |
-| | False Auto-Handle Rate | **12.0%** (14.6% in Auto) | 50 Human Escalation Validation Set |
-| | False Escalation Rate | **14.0%** (77.8% in Esc) | 50 Human Escalation Validation Set |
+| Evaluation Benchmark | Metric | Value | Ground Truth / Setup | Label Type | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Intent Classification (End-to-End)** | Accuracy / Macro F1 | **57.5% / 0.5841** | 200 Human Gold Benchmark Cases | Human Gold | Active Default |
+| **Intent Classification (Gold Prototype)** | Accuracy / Macro F1 | **69.5% / 0.6889** | 200 Gold Cases (100 dev trained) | Human Gold | Diagnostic |
+| **Intent Classification (Auxiliary)** | Accuracy / Macro F1 | **85.0% / 0.8485** | Banking77 Test Set (3,076 rows) | Human Gold | Diagnostic |
+| **Dense Retrieval Baseline** | R@1 / R@10 / MRR | **28.0% / 59.5% / 0.3666** | 200 Gold Cases vs 15k RAG Corpus | Proxy (Intent) | Baseline |
+| **Intent-Aware Dense Retrieval** | R@1 / R@10 / MRR | **51.5% / 60.0% / 0.5379** | 200 Gold Cases vs 15k RAG Corpus | Proxy (Intent) | Baseline |
+| **BM25 Lexical Retrieval** | R@1 / R@10 / MRR | **28.5% / 71.5% / 0.4048** | 200 Gold Cases vs 15k RAG Corpus | Proxy (Intent) | Baseline |
+| **Hybrid RRF Retrieval** | R@1 / R@10 / MRR | **35.0% / 69.5% / 0.4508** | 200 Gold Cases vs 15k RAG Corpus | Proxy (Intent) | Baseline |
+| **Hybrid + Intent (Phase 9 Approved)** | R@1 / R@5 / MRR | **53.5% / 58.0% / 0.5590** | 200 Gold Cases vs 15k RAG Corpus | Proxy (Intent) | **Approved Default** |
+| **Hybrid + Reranker + Intent (Phase 10)** | R@1 / R@5 / MRR | **35.5% / 59.0% / 0.4602** | 200 Gold Cases vs 15k RAG Corpus | Proxy (Intent) | Experimental |
+| **Grounded Response Generation** | LLM Judge / Safety Pass | **4.72 / 5.0 (100% Pass)** | Gemini 1.5 Flash Live Run ($N=50$) | Real API Eval | Active Default |
+| **Human Escalation Validation** | Agreement / False Auto | **74.0% Agreement (12.0% FA)** | 50 Human Escalation Validation Set | Human Gold | Active Default |
 
 ---
 
@@ -125,9 +126,16 @@ $$\text{Composite Risk} = 0.40 \cdot \text{Risk}_{\text{intent}} + 0.30 \cdot \t
 
 It is easy to misinterpret headline numbers in AI support agent evaluations. We explicitly clarify:
 
-1. **84.5% Model Routing Rate $\neq$ 84.5% Safe Automation Rate**: The 84.5% figure from the 200-case proxy run measures model decision outputs against diagnostic proxy rules, **NOT** independent human-verified safe automation. On human escalation validation ($N=50$), the model auto-handles 82.0% of queries with a **12.0% false auto-handle rate**.
-2. **LLM Judge Score (4.67/5.0) $\neq$ Production Readiness**: High LLM judge scores confirm that generated responses are coherent and grounded in retrieved snippets, but do not guarantee that the underlying historical retrieval snippet is the correct policy solution for a customer's specific account.
-3. **Intent Accuracy (57.5%) Reflects Noisy Real-World Twitter Data**: Twitter support messages are brief and noisy. While 57.5% accuracy appears modest, it represents realistic performance on a human-annotated 17-class taxonomy.
+1. **82.0% Model Auto-Handle Rate $\neq$ 82.0% Safe Automation Rate**: On 50 human escalation validation cases, the model auto-handles 82.0% of queries with a **12.0% false auto-handle rate** (14.6% among auto-handled queries) and a **14.0% false escalation rate** (77.8% among escalated queries).
+2. **LLM Judge Score (4.72/5.0) $\neq$ Production Readiness**: High LLM judge scores confirm that generated responses are coherent, polite, and grounded in retrieved evidence snippets, but do not guarantee that the historical snippet contains the exact policy resolution for a specific customer account.
+3. **Intent Accuracy (57.5%) Reflects Real-World Twitter Noise**: Twitter support messages are brief, noisy, and unstructured. While 57.5% accuracy appears modest, it represents realistic multi-class performance on a 17-class taxonomy evaluated on human gold labels.
+4. **Retrieval R@1 Uses Intent Alignment Proxy**: Benchmark retrieval metrics use intent category matching as a diagnostic proxy for historical precedent relevance, rather than manual pairwise human judgments across all 15,316 documents.
+5. **Benchmark Sample Size ($N=200$)**: The human gold intent benchmark consists of 200 manually annotated cases. While sufficient for statistical benchmarking, it represents a sample of e-commerce support queries.
+6. **Gemini LLM Judge Sample Size ($N=50$)**: Live API generation and 7-dimension LLM judge scoring were conducted on $N=50$ cases due to API execution costs and quota constraints.
+7. **Escalation Validation Dataset & Single Annotator ($N=50$)**: Escalation decision ground truth was annotated on $N=50$ cases by a single human annotator. Inter-annotator agreement (Cohen's Kappa) was not measured.
+8. **Retrieval Corpus Scale**: The benchmark corpus consists of 15,316 clean multi-turn resolution threads, whereas the canonical raw Twitter corpus contains 81,186 valid dialog documents.
+9. **Near-Duplicate Leakage Audit**: Self-case matching (by case ID and exact customer query string) was strictly excluded during retrieval scoring. However, subtle semantic near-duplicates across customer tweets may provide minor retrieval lift.
+10. **Pipeline Error Propagation**: Upstream classification errors (57.5% accuracy) and retrieval misses propagate into downstream prompt generation and escalation risk calculations. All metrics reflect controlled prototype evaluation under local CPU conditions and must not be interpreted as production SLA or safety guarantees.
 
 ---
 

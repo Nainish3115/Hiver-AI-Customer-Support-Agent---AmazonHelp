@@ -66,12 +66,31 @@ class DecisionConfig(BaseModel):
     )
 
 
+
+class RetrievalConfig(BaseModel):
+    mode: str = "hybrid"
+    dense_top_k: int = 50
+    bm25_top_k: int = 50
+    rrf_k: int = 60
+    intent_boost_factor: float = 0.15
+
+
+class RerankingConfig(BaseModel):
+    enabled: bool = False
+    model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    candidate_k: int = 30
+    final_top_k: int = 3
+
+
 class AppConfig(BaseModel):
     project: ProjectConfig
     datasets: DatasetsConfig
     preprocessing: PreprocessingConfig
     generation: GenerationConfig = Field(default_factory=GenerationConfig)
     decision: DecisionConfig = Field(default_factory=DecisionConfig)
+    retrieval: RetrievalConfig = Field(default_factory=RetrievalConfig)
+    reranking: RerankingConfig = Field(default_factory=RerankingConfig)
+
 
 
 

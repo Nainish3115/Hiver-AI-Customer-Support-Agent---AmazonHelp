@@ -70,13 +70,15 @@ class IntentAwareRetriever(Retriever):
         vector_store: VectorStore,
         classifier: IntentClassifier,
         confidence_threshold: float = 0.60,
-        intent_boost_factor: float = 0.15
+        intent_boost_factor: float = 0.15,
+        base_retriever: Optional[Retriever] = None
     ):
         super().__init__(embedding_provider, vector_store)
         self.classifier = classifier
         self.confidence_threshold = confidence_threshold
         self.intent_boost_factor = intent_boost_factor
-        self.base_retriever = FAISSRetriever(embedding_provider, vector_store)
+        self.base_retriever = base_retriever or FAISSRetriever(embedding_provider, vector_store)
+
 
     def retrieve(self, query: str, top_k: int = 5) -> List[SearchResult]:
         # 1. Predict query intent
