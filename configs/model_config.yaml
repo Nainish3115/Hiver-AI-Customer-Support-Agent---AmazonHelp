@@ -1,0 +1,8 @@
+# Model and Provider Configuration for Hiver Support Agent
+
+llm:
+  provider: gemini
+  generation_model: gemini-1.5-flash
+  judge_model: gemini-1.5-flash
+  temperature: 0.2
+  max_output_tokens: 300

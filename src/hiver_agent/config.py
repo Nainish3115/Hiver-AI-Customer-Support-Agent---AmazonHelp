@@ -35,10 +35,44 @@ class PreprocessingConfig(BaseModel):
     max_thread_depth: int = 10
 
 
+class GenerationConfig(BaseModel):
+    top_k_evidence: int = 3
+    confidence_threshold: float = 0.60
+    llm_provider: str = "gemini"
+    model_name: str = "gemini-1.5-flash"
+    max_response_length: int = 500
+    temperature: float = 0.2
+
+
+class DecisionConfig(BaseModel):
+    risk_threshold: float = 0.35
+    confidence_threshold: float = 0.60
+    min_retrieval_score: float = 0.70
+    high_risk_intents: list[str] = Field(
+        default_factory=lambda: [
+            "payment_billing_issue",
+            "account_access_login",
+            "third_party_seller_issue",
+            "refund_status_request",
+            "damaged_defective_item"
+        ]
+    )
+    weights: Dict[str, float] = Field(
+        default_factory=lambda: {
+            "intent_uncertainty": 0.40,
+            "retrieval_quality": 0.30,
+            "category_risk": 0.30
+        }
+    )
+
+
 class AppConfig(BaseModel):
     project: ProjectConfig
     datasets: DatasetsConfig
     preprocessing: PreprocessingConfig
+    generation: GenerationConfig = Field(default_factory=GenerationConfig)
+    decision: DecisionConfig = Field(default_factory=DecisionConfig)
+
 
 
 def load_config(config_path: Optional[str] = None) -> AppConfig:

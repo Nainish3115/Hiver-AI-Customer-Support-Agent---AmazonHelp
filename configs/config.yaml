@@ -18,3 +18,28 @@ preprocessing:
   sample_size: 10000
   min_thread_depth: 2
   max_thread_depth: 10
+
+generation:
+  top_k_evidence: 3
+  confidence_threshold: 0.60
+  llm_provider: gemini
+  model_name: gemini-1.5-flash
+  max_response_length: 500
+  temperature: 0.2
+
+decision:
+  risk_threshold: 0.35
+  confidence_threshold: 0.60
+  min_retrieval_score: 0.70
+  high_risk_intents:
+    - payment_billing_issue
+    - account_access_login
+    - third_party_seller_issue
+    - refund_status_request
+    - damaged_defective_item
+  weights:
+    intent_uncertainty: 0.40
+    retrieval_quality: 0.30
+    category_risk: 0.30
+
+
