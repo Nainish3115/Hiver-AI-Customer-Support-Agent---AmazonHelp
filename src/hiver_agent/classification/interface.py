@@ -14,6 +14,7 @@ class IntentPrediction(BaseModel):
     intent: str = Field(..., description="Predicted intent label string")
     confidence: float = Field(..., description="Confidence score between 0.0 and 1.0")
     probabilities: Optional[Dict[str, float]] = Field(None, description="Per-class probability distribution")
+    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Optional prediction metadata")
 
 
 class IntentClassifier(ABC):

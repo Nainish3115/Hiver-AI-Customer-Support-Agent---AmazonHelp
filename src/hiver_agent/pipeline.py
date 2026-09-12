@@ -80,18 +80,45 @@ class CustomerSupportPipeline:
     """
     def __init__(
         self,
-        classifier: IntentClassifier,
-        base_retriever: Retriever,
-        generator: BaseResponseGenerator,
+        classifier: Optional[IntentClassifier] = None,
+        base_retriever: Optional[Retriever] = None,
+        generator: Optional[BaseResponseGenerator] = None,
         confidence_threshold: float = 0.60,
         top_k_retrieve: int = 10,
         top_k_evidence: int = 3,
         safety_checker: Optional[GroundingSafetyChecker] = None,
         decision_engine: Optional[RiskAwareDecisionEngine] = None,
         reranker: Optional[Any] = None,
-        reranker_candidate_k: int = 30
+        reranker_candidate_k: int = 30,
+        intent_classifier_mode: str = "calibrated_prototype_hybrid"
     ):
-        self.classifier = classifier
+        self.intent_classifier_mode = intent_classifier_mode
+        if classifier is not None:
+            self.classifier = classifier
+        else:
+            self.classifier = self._build_classifier(intent_classifier_mode, base_retriever)
+
+        if base_retriever is None:
+            from hiver_agent.retrieval.embeddings import SentenceTransformerEmbeddingProvider
+            from hiver_agent.retrieval.faiss_store import FAISSVectorStore
+            from hiver_agent.retrieval.retriever import FAISSRetriever
+            from pathlib import Path
+            embedder = SentenceTransformerEmbeddingProvider(model_name="all-MiniLM-L6-v2", batch_size=128)
+            faiss_dir = Path("data/processed/faiss_index_15k")
+            if not faiss_dir.exists():
+                faiss_dir = Path("../data/processed/faiss_index_15k")
+            vector_store = FAISSVectorStore.load(str(faiss_dir))
+            base_retriever = FAISSRetriever(embedder, vector_store)
+
+        if generator is None:
+            import os
+            if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
+                from hiver_agent.generation.generator import LLMResponseGenerator
+                generator = LLMResponseGenerator(model_name="gemini-1.5-flash")
+            else:
+                from hiver_agent.generation.generator import TemplateResponseGenerator
+                generator = TemplateResponseGenerator()
+
         self.base_retriever = base_retriever
         self.generator = generator
         self.confidence_threshold = confidence_threshold
@@ -105,7 +132,7 @@ class CustomerSupportPipeline:
         self.intent_aware_retriever = IntentAwareRetriever(
             embedding_provider=getattr(base_retriever, "embedding_provider", None),
             vector_store=getattr(base_retriever, "vector_store", None),
-            classifier=classifier,
+            classifier=self.classifier,
             confidence_threshold=confidence_threshold,
             base_retriever=base_retriever
         )
@@ -113,6 +140,32 @@ class CustomerSupportPipeline:
             max_evidence=top_k_evidence,
             confidence_threshold=confidence_threshold
         )
+
+    @staticmethod
+    def _build_classifier(mode: str, base_retriever: Optional[Retriever] = None) -> IntentClassifier:
+        if mode in ("calibrated_prototype_hybrid", "candidate"):
+            from hiver_agent.classification.calibrated_rule_classifier import CalibratedRuleIntentClassifier
+            from hiver_agent.classification.gold_prototype_classifier import GoldPrototypeIntentClassifier, CalibratedRulePrototypeHybrid
+            from hiver_agent.retrieval.embeddings import SentenceTransformerEmbeddingProvider
+            from scripts.evaluate_phase12_hierarchical_classifier import load_gold_records
+            from scripts.run_phase_5_6_experiments import split_gold_dataset_50_50
+
+            embedder = getattr(base_retriever, "embedding_provider", None)
+            if embedder is None:
+                embedder = SentenceTransformerEmbeddingProvider(model_name="all-MiniLM-L6-v2", batch_size=128)
+
+            df_gold, gold_records = load_gold_records()
+            gold_dev_recs, _ = split_gold_dataset_50_50(gold_records, seed=42)
+            dev_texts = [r["customer_text"] for r in gold_dev_recs]
+            dev_labels = [r["intent"] for r in gold_dev_recs]
+
+            calib_rule = CalibratedRuleIntentClassifier(use_ambiguity_resolver=True)
+            gold_proto = GoldPrototypeIntentClassifier(embedder, variant_mode="mean")
+            gold_proto.fit(dev_texts, dev_labels)
+            return CalibratedRulePrototypeHybrid(calib_rule, gold_proto)
+        else:
+            from hiver_agent.classification.rule_classifier import RuleBasedIntentClassifier
+            return RuleBasedIntentClassifier()
 
     def process_message(
         self,

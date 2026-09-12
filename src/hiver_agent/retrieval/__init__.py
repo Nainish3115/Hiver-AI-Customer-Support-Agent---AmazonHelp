@@ -4,6 +4,7 @@ from hiver_agent.retrieval.retriever import SearchResult, FAISSRetriever, Intent
 from hiver_agent.retrieval.bm25_retriever import BM25Retriever
 from hiver_agent.retrieval.hybrid_retriever import HybridRetriever
 from hiver_agent.retrieval.reranker import SemanticReranker
+from hiver_agent.retrieval.lightweight_reranker import LightweightReranker
 
 __all__ = [
     "EmbeddingProvider",
@@ -14,5 +15,6 @@ __all__ = [
     "IntentAwareRetriever",
     "BM25Retriever",
     "HybridRetriever",
-    "SemanticReranker"
+    "SemanticReranker",
+    "LightweightReranker"
 ]

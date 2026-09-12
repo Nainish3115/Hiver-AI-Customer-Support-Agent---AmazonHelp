@@ -4,6 +4,41 @@ An end-to-end, RAG-powered Customer Support AI Agent built for `@AmazonHelp` Twi
 
 > **Evaluation Disclaimer**: *This repository represents a technical prototype evaluated on controlled benchmark datasets under local CPU conditions. It demonstrates architectural feasibility, risk-aware escalation logic, and empirical evaluation, rather than production SLA or safety guarantees.*
 
+## Docker Quickstart
+
+Run the complete containerized application locally with a single command:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/Nainish3115/Hiver-AI-Customer-Support-Agent---AmazonHelp.git
+cd Hiver-AI-Customer-Support-Agent---AmazonHelp
+
+# 2. Copy the environment template
+copy .env.example .env
+
+# 3. Add your Gemini API key (Optional: leave blank to test with deterministic fallback)
+# Edit .env and set: GEMINI_API_KEY=your_actual_key_here
+
+# 4. Start the containerized services
+docker compose up --build
+```
+
+### Access URLs:
+- **Recruiter Web UI**: [http://localhost:3000](http://localhost:3000)
+- **FastAPI REST API**: [http://localhost:8000](http://localhost:8000)
+- **OpenAPI Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Readiness Check**: [http://localhost:8000/api/v1/ready](http://localhost:8000/api/v1/ready)
+
+---
+
+## Recruiter Demo Flow (3–5 Minute Walkthrough)
+
+1. **Start Services**: Run `docker compose up --build` and navigate to `http://localhost:3000`.
+2. **Interactive Workspace**: Click **"Try Live Demo"**, select a preset inquiry chip (e.g. *Missing Package* or *Billing Charge*), and click **"Analyze Inquiry"**.
+3. **Inspect Output**: Observe predicted intent taxonomy, calibrated confidence, FAISS+BM25 retrieved evidence cases, Gemini 1.5 Flash draft response, grounding check, and `AUTO_HANDLE` vs `ESCALATE_TO_HUMAN` decision.
+4. **Retrieval Explorer**: Click **"Retrieval"** in the top navigation to search the 15,316 historical support case RAG index interactively.
+5. **Empirical Evaluation**: Click **"Evaluation"** to inspect human-gold benchmark metrics (57.0% untouched test accuracy vs 69.0% diagnostic), rejected ablation experiments, and system limitations.
+
 ---
 
 ## 1. Project Overview
@@ -29,7 +64,7 @@ Existing automated agents often rely on static confidence thresholds or unground
 ```
 Customer Message (Twitter @AmazonHelp)
         ↓
-1. Intent Classifier (Linear SVM with TF-IDF n-grams + Regex Rules)
+1. Intent Classifier (CalibratedRulePrototypeHybrid - Prototype Embedding Classifier + Regex Rules)
         ↓
    Predicted Intent + Confidence Score
         ↓
@@ -173,6 +208,8 @@ Attributed across $N=50$ human escalation validation disagreement cases ([report
 
 ## 13. What Is Misleading About My Headline Number?
 
+> **Headline Metric Integrity**: Weak-label validation on heuristically annotated datasets initially produced a seemingly high ~87% classifier accuracy. However, those weak labels were generated using keyword heuristics that shared identical patterns with the training rules. When evaluated against strictly separated, double-annotated **Human Gold Test cases (N=100)**, actual generalization accuracy was **57.0% (Macro F1: 53.93%)**. Claiming ~87% accuracy based on weak labels is misleading because it measures rule memorization rather than real-world customer query generalization.
+
 To maintain complete evaluation integrity and transparency, we explicitly detail ten caveats regarding our benchmark numbers:
 
 1. **Retrieval R@1 Uses Intent Matching Proxy Ground Truth**: Benchmark retrieval relevance uses intent category match as a diagnostic proxy for historical precedent relevance, rather than manual pairwise human judgments across all 15,316 documents.
@@ -220,7 +257,7 @@ cp .env.example .env
 ```bash
 pytest tests/ -v
 ```
-*(Expected output: 78 passed, 1 warning)*
+*(Expected output: 144 passed tests)*
 
 ### 4. Run End-to-End Benchmark Evaluation
 
@@ -328,3 +365,13 @@ print(f"Decision Reason     : {result.decision_reason}")
 - **Day 5 (Cost-Sensitive Escalation)**: Implement dynamic risk thresholds sensitive to intent monetary risk (e.g. high-value refunds vs. routine tracking).
 - **Day 6 (Observability & Regression Testing)**: Build real-time latency tracing, token usage logging, and automated CI regression testing for prompt updates.
 - **Day 7 (Human-in-the-Loop Shadow Deployment)**: Deploy pipeline in shadow mode alongside human agents to collect live feedback and false auto-handle rates.
+
+---
+
+## 19. Attributions & Citations
+
+- **Customer Support on Twitter Dataset**: Formulated from the public Kaggle Customer Support on Twitter dataset (`@AmazonHelp` brand handle subset).
+- **SentenceTransformers**: Powered by `sentence-transformers/all-MiniLM-L6-v2` for dense vector embeddings.
+- **FAISS**: Vector indexing built using Facebook AI Similarity Search (`faiss-cpu`).
+- **BM25**: Lexical retrieval built using `rank_bm25` (Okapi BM25 implementation).
+- **Google Gemini API**: Response generation powered by Google Gemini 1.5 Flash via `google-generativeai` SDK.
