@@ -48,3 +48,5 @@ testpaths = [
 pythonpath = [
     "src"
 ]
+[tool.vercel]
+entrypoint = "src.hiver_agent.api.app:app"
